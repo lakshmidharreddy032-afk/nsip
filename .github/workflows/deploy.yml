@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
-      - uses: azure/k8s-set-context@v4
+      - uses: azure/k8s-set-context@v5
         with: { method: kubeconfig, kubeconfig: "${{ secrets.KUBECONFIG }}" }
       - run: kubectl apply -f infra/k8s/namespace.yaml
       - run: >
