@@ -1,0 +1,16 @@
+# Builds the three Cloud Run images and pushes them to Artifact Registry.
+#   gcloud builds submit --config infra/gcp/cloudbuild.yaml --substitutions=_REPO=asia-south1-docker.pkg.dev/PROJECT/nsip,_TAG=v1
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_REPO}/core-api:${_TAG}", "-f", "services/core-api/Dockerfile", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_REPO}/auth-service:${_TAG}", "services/auth-service"]
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_REPO}/gateway:${_TAG}", "-f", "infra/gcp/gateway.Dockerfile", "."]
+images:
+  - ${_REPO}/core-api:${_TAG}
+  - ${_REPO}/auth-service:${_TAG}
+  - ${_REPO}/gateway:${_TAG}
+options:
+  machineType: E2_HIGHCPU_8
+timeout: 3600s

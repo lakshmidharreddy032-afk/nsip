@@ -94,7 +94,7 @@ def seed_core(with_data: bool) -> None:
                 authority.decide(db, cuo, lim.id, True, "seed approval")
         print("core-api: reference data, users and authority seeded")
         if with_data:
-            data = ROOT / "eval" / "datasets" / "demo"
+            data = Path(os.environ.get("SEED_DATA_DIR", str(ROOT / "eval" / "datasets" / "demo")))
             if not (data / "labels.jsonl").exists():
                 subprocess.run([sys.executable, str(ROOT / "eval/synthetic/generate.py"), "--out", str(data),  # noqa: S603
                                 "--count", "300"], check=True)

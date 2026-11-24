@@ -1,0 +1,15 @@
+.git/
+**/node_modules/
+**/dist/
+**/var/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+eval/datasets/*/
+eval/reports/*.json
+playwright-report/
+test-results/
+*.log
+*.db
+.env

@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ai_cost_per_1k_input_inr: float = 0.25
     ai_cost_per_1k_output_inr: float = 1.0
 
-    object_store: str = "local"  # local | s3
+    object_store: str = "local"  # local | s3 | gcs
     object_store_dir: str = "./var/objects"
     s3_endpoint: str = "http://localhost:9000"
     s3_bucket: str = "nsip-originals"

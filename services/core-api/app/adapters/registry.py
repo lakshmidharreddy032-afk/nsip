@@ -43,6 +43,10 @@ def build() -> Adapters:
         from app.adapters.storage import S3ObjectStore
 
         store: object = S3ObjectStore()
+    elif s.object_store == "gcs":  # pragma: no cover
+        from app.adapters.storage import GCSObjectStore
+
+        store = GCSObjectStore(s.s3_bucket)
     else:
         store = LocalObjectStore(s.object_store_dir)
     av = ClamAVScanner(s.clamav_host, s.clamav_port) if s.antivirus == "clamav" else MockAntivirus()

@@ -65,6 +65,27 @@ class S3ObjectStore:  # pragma: no cover - exercised against MinIO in compose
         self.client.delete_object(Bucket=self.bucket, Key=key)
 
 
+class GCSObjectStore:  # pragma: no cover - exercised on Google Cloud
+    """Google Cloud Storage via the runtime service account (no static keys). Encrypted at rest by default."""
+
+    def __init__(self, bucket: str) -> None:
+        from google.cloud import storage
+
+        self.bucket = storage.Client().bucket(bucket)
+
+    def put(self, key: str, data: bytes) -> str:
+        self.bucket.blob(key).upload_from_string(data)
+        return key
+
+    def get(self, key: str) -> bytes:
+        return self.bucket.blob(key).download_as_bytes()
+
+    def delete(self, key: str) -> None:
+        blob = self.bucket.blob(key)
+        if blob.exists():
+            blob.delete()
+
+
 def safe_filename(name: str) -> str:
     name = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("._") or "file"
     return name[:120]

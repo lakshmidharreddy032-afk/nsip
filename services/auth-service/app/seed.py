@@ -1,6 +1,7 @@
 """Seed demo users for every role. Development and demo use only; secrets are published in README."""
 from __future__ import annotations
 
+import os
 import uuid
 
 from sqlalchemy import select
@@ -11,9 +12,11 @@ from app.models import AuthUser
 from app.services.auth import ensure_roles
 
 NS = uuid.UUID("6f1c2a52-3c1e-4c55-9d1e-8a2b6c0d4e11")
-DEMO_PASSWORD = "Northstar@2026!"
-# Base32 TOTP secrets for demo accounts so MFA can be exercised in e2e tests.
-DEMO_TOTP = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"
+# Local/dev defaults are published in README. Any shared or cloud environment MUST override them
+# (SEED_PASSWORD, SEED_TOTP_SECRET), which scripts/deploy_gcp.ps1 does with generated values.
+DEMO_PASSWORD = os.environ.get("SEED_PASSWORD", "Northstar@2026!")
+# Base32 TOTP secret for demo MFA accounts so MFA can be exercised in e2e tests.
+DEMO_TOTP = os.environ.get("SEED_TOTP_SECRET", "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP")
 
 DEMO_USERS = [
     ("dataentry@northstar.example", "Priya Kulkarni", "west", ["data_entry"]),

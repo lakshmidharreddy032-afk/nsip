@@ -72,4 +72,5 @@ The latest evaluation results are in [eval/reports/eval_report.md](eval/reports/
 - [Runbooks](docs/runbooks/)
 - [Open decisions](docs/open-decisions.md)
 - [Executive summary](docs/executive-summary.md)
+- [Deploying the demo to Google Cloud](docs/deploy-gcp.md)
 - OpenAPI: [core-api](docs/api/core-api.openapi.json), [auth-service](docs/api/auth-service.openapi.json)
