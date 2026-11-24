@@ -32,7 +32,7 @@ jobs:
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: pip install bandit==1.7.10 pip-audit==2.7.3
       - run: bandit -q -r services/core-api/app services/auth-service/app -x tests

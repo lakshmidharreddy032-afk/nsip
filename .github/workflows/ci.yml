@@ -18,7 +18,7 @@ jobs:
     defaults: { run: { working-directory: "services/${{ matrix.service }}"} }
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12", cache: pip }
       - run: pip install -e ".[dev]"
       - run: ruff check app tests
@@ -47,7 +47,7 @@ jobs:
     needs: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12", cache: pip }
       - run: pip install -e "services/core-api[dev]"
       - run: python eval/synthetic/generate.py --out eval/datasets/default --count 300 --seed 7
