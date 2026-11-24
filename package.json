@@ -1,0 +1,11 @@
+{
+  "name": "nsip",
+  "private": true,
+  "workspaces": ["apps/auth-web", "apps/workbench-web"],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  }
+}

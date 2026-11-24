@@ -1,0 +1,31 @@
+# Applied once per cluster before `helm upgrade --install nsip infra/helm/nsip -n nsip`.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nsip
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: nsip-quota, namespace: nsip }
+spec: { hard: { requests.cpu: "24", requests.memory: 48Gi, pods: "80" } }
+---
+# Nightly DPDP retention job (also scheduled by Celery beat; this is the cluster-level fallback).
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: nsip-retention, namespace: nsip }
+spec:
+  schedule: "30 21 * * *"   # 03:00 IST
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: retention
+              image: registry.northstar.example/nsip/core-api:1.0.0
+              command: ["python", "-c", "from app.workers.tasks import retention_task; print(retention_task())"]
+              envFrom: [{ secretRef: { name: nsip-core-secrets } }]

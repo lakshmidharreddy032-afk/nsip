@@ -1,0 +1,33 @@
+{{- if .Values.externalSecrets.enabled }}
+{{- range $name := list .Values.externalSecrets.coreSecretName .Values.externalSecrets.authSecretName }}
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata: { name: {{ $name }} }
+spec:
+  refreshInterval: 1h
+  secretStoreRef: { name: {{ $.Values.externalSecrets.secretStore }}, kind: ClusterSecretStore }
+  target: { name: {{ $name }} }
+  dataFrom: [{ extract: { key: "nsip/{{ $name }}" } }]
+{{- end }}
+{{- end }}
+---
+# Default deny; only the ingress controller reaches web/api pods; auth DB reachable only from auth-service.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: nsip-default-deny }
+spec: { podSelector: {}, policyTypes: [Ingress] }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: nsip-allow-ingress }
+spec:
+  podSelector: { matchExpressions: [{ key: app, operator: In, values: [nsip-core-api, nsip-auth-service, nsip-workbench-web, nsip-auth-web] }] }
+  ingress: [{ from: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } } }, { namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: observability } } }] }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: nsip-internal }
+spec:
+  podSelector: { matchExpressions: [{ key: app, operator: In, values: [nsip-auth-service, nsip-clamav] }] }
+  ingress: [{ from: [{ podSelector: { matchExpressions: [{ key: app, operator: In, values: [nsip-core-api, nsip-worker] }] } }] }]

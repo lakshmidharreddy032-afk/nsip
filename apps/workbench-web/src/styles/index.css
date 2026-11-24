@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens: colour (RGB triplets), radius, typography scale. WCAG AA contrast in both themes. */
+:root {
+  --bg: 245 247 251; --surface: 255 255 255; --muted: 238 241 247; --border: 222 227 238;
+  --fg: 17 24 39; --subtle: 92 102 125;
+  --brand: 58 99 230; --brand-fg: 255 255 255; --brand-soft: 230 237 255;
+  --ok: 4 120 87; --warn: 180 83 9; --danger: 200 30 45; --info: 3 105 161;
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: 10 14 26; --surface: 18 24 41; --muted: 27 35 58; --border: 41 51 80;
+  --fg: 236 239 247; --subtle: 152 162 190;
+  --brand: 120 152 255; --brand-fg: 10 14 26; --brand-soft: 30 41 77;
+  --ok: 52 211 153; --warn: 251 191 36; --danger: 248 113 113; --info: 56 189 248;
+  color-scheme: dark;
+}
+html, body, #root { height: 100%; }
+body { @apply bg-bg font-sans text-fg antialiased; font-feature-settings: "tnum" 1, "cv11" 1; }
+:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 2px; }
+.skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-3 focus:py-2 focus:text-brand-fg; }
+.source-hl { background: rgb(var(--brand) / .18); box-shadow: inset 0 0 0 2px rgb(var(--brand) / .7); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

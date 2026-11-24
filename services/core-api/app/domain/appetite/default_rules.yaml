@@ -1,0 +1,82 @@
+# Northstar General SME property appetite - ruleset v1 (pilot). Approved by CUO before use.
+# Precedence of outcomes: out_of_appetite > needs_info > refer_risk_engineering > in_appetite.
+version: 1
+notes: Initial pilot ruleset derived from the commercial property underwriting guide.
+rules:
+  - id: APP-001
+    name: Prohibited trade
+    outcome: out_of_appetite
+    priority: 10
+    condition: {field: occupancy_hazard, op: eq, value: prohibited}
+    decline_reason: The occupancy is a trade we do not currently write under our SME property appetite.
+  - id: APP-002
+    name: Sum insured above maximum capacity
+    outcome: out_of_appetite
+    priority: 20
+    condition: {field: sum_insured, op: gt, value: 5000000000}
+    decline_reason: The total sum insured exceeds our maximum capacity of Rs 500 crore per risk.
+  - id: APP-003
+    name: Kutcha or temporary construction
+    outcome: out_of_appetite
+    priority: 30
+    condition: {field: construction, op: eq, value: kutcha}
+    decline_reason: Kutcha or temporary construction is outside our property appetite.
+  - id: APP-004
+    name: Non-RCC construction in very high catastrophe zone
+    outcome: out_of_appetite
+    priority: 40
+    condition:
+      all:
+        - {field: cat_zone, op: eq, value: very_high}
+        - {field: construction, op: in, value: [masonry, kutcha]}
+    decline_reason: Non-RCC construction in a very high natural-catastrophe zone is outside our appetite.
+  - id: APP-005
+    name: Claims frequency
+    outcome: out_of_appetite
+    priority: 50
+    condition: {field: claims_count_3y, op: gte, value: 4}
+    decline_reason: The claims frequency over the last three years is above our acceptance threshold.
+  - id: APP-006
+    name: Claims severity
+    outcome: out_of_appetite
+    priority: 60
+    condition: {field: claims_ratio_3y, op: gt, value: 0.05}
+    decline_reason: The claims experience over the last three years is above our acceptance threshold.
+  - id: APP-011
+    name: Critical information missing
+    outcome: needs_info
+    priority: 70
+    condition:
+      any:
+        - {field: occupancy_code, op: missing}
+        - {field: sum_insured, op: missing}
+        - {field: pincode_valid, op: ne, value: true}
+  - id: APP-007
+    name: High-hazard occupancy above Rs 25 crore
+    outcome: refer_risk_engineering
+    priority: 80
+    condition:
+      all:
+        - {field: occupancy_hazard, op: eq, value: high}
+        - {field: sum_insured, op: gt, value: 250000000}
+  - id: APP-008
+    name: Old building above Rs 10 crore
+    outcome: refer_risk_engineering
+    priority: 90
+    condition:
+      all:
+        - {field: year_built, op: lt, value: 1975}
+        - {field: sum_insured, op: gt, value: 100000000}
+  - id: APP-009
+    name: Sum insured above Rs 100 crore
+    outcome: refer_risk_engineering
+    priority: 100
+    condition: {field: sum_insured, op: gt, value: 1000000000}
+  - id: APP-010
+    name: Very high catastrophe zone above Rs 50 crore
+    outcome: refer_risk_engineering
+    priority: 110
+    condition:
+      all:
+        - {field: cat_zone, op: eq, value: very_high}
+        - {field: sum_insured, op: gt, value: 500000000}

@@ -1,0 +1,19 @@
+{
+  "title": "NSIP - Platform overview",
+  "uid": "nsip-overview",
+  "schemaVersion": 39,
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    { "type": "timeseries", "title": "p95 workbench read latency (s)", "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [{ "expr": "nsip:workbench_read_latency_p95" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.3 }] } } } },
+    { "type": "timeseries", "title": "Requests by status", "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (status) (rate(nsip_http_requests_total[5m]))" }] },
+    { "type": "timeseries", "title": "Auth outcomes", "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (status) (rate(nsip_auth_requests_total{path=\"/auth/login\"}[5m]))" }] },
+    { "type": "stat", "title": "Pipeline backlog", "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+      "targets": [{ "expr": "sum(redis_key_size{key=\"pipeline\"})" }] },
+    { "type": "text", "title": "Business metrics", "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+      "options": { "content": "Loss ratio (guardrail), time to quote (primary) and win rate (lagging) are served by the workbench CUO and Underwriting dashboards from the core database." } }
+  ]
+}

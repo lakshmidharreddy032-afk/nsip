@@ -1,0 +1,65 @@
+global:
+  imageRegistry: registry.northstar.example/nsip
+  imageTag: "1.0.0"
+  host: nsip.northstar.example
+  tlsSecret: nsip-tls
+
+# Secrets are created by External Secrets Operator from the corporate secrets manager (never in values).
+externalSecrets:
+  enabled: true
+  secretStore: northstar-vault
+  coreSecretName: nsip-core-secrets      # NSIP_DATABASE_URL, NSIP_S3_*, NSIP_INTERNAL_SERVICE_TOKEN, NSIP_AI_GATEWAY_API_KEY
+  authSecretName: nsip-auth-secrets      # AUTH_DATABASE_URL, AUTH_DATA_KEY, AUTH_PRIVATE_KEY_PEM, AUTH_RESET_SECRET, AUTH_OIDC_*
+
+coreApi:
+  replicas: 3
+  resources: { requests: { cpu: 250m, memory: 512Mi }, limits: { cpu: "1", memory: 1Gi } }
+  hpa: { minReplicas: 3, maxReplicas: 10, targetCPU: 65 }
+  env:
+    NSIP_ENV: prod
+    NSIP_TASKS_EAGER: "false"
+    NSIP_AI_GATEWAY_MODE: http
+    AI_GATEWAY_URL: https://ai-gateway.in.northstar.example   # India-hosted gateway
+    NSIP_AUTH_JWKS_URL: http://nsip-auth-service:8001/.well-known/jwks.json
+    NSIP_AUTH_SERVICE_URL: http://nsip-auth-service:8001
+    NSIP_OBJECT_STORE: s3
+    NSIP_ANTIVIRUS: clamav
+    NSIP_CLAMAV_HOST: nsip-clamav
+    NSIP_OCR: tesseract
+    NSIP_MAILBOX_ADAPTER: graph
+    NSIP_RATING_MODE: live
+    NSIP_POLICY_ADMIN_MODE: live
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability:4318
+
+worker:
+  # Queue-depth autoscaling via KEDA on the Redis lists (3x peak = ~900 submissions/day).
+  replicas: 2
+  keda: { enabled: true, minReplicas: 2, maxReplicas: 20, listLength: "20" }
+  resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { cpu: "2", memory: 2Gi } }
+
+beat: { enabled: true }
+
+authService:
+  replicas: 2
+  resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { cpu: 500m, memory: 512Mi } }
+  env:
+    AUTH_ENV: prod
+    AUTH_DB_SCHEMA: auth
+    AUTH_COOKIE_SECURE: "true"
+    AUTH_OIDC_ENABLED: "false"
+    AUTH_APP_BASE_URL: https://nsip.northstar.example
+
+workbenchWeb: { replicas: 2 }
+authWeb: { replicas: 2 }
+clamav: { enabled: true }
+
+ingress:
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 55m
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "Referrer-Policy: no-referrer";

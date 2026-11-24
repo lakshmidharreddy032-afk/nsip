@@ -1,0 +1,25 @@
+# Production-like override: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+# Real production runs on Kubernetes via infra/helm/nsip; this file is for staging hosts.
+services:
+  core-api:
+    environment:
+      NSIP_ENV: staging
+      WEB_CONCURRENCY: "4"
+    deploy: { replicas: 2, resources: { limits: { cpus: "1", memory: 1g } } }
+    restart: unless-stopped
+  worker:
+    deploy: { replicas: 3 }
+    restart: unless-stopped
+  auth-service:
+    environment: { AUTH_ENV: staging }
+    restart: unless-stopped
+  mock-gateway:
+    profiles: ["mock"]   # staging points AI_GATEWAY_URL at the India-hosted gateway instead
+  seed:
+    profiles: ["seed"]
+  seed-auth:
+    profiles: ["seed"]
+  minio:
+    ports: []
+  gateway:
+    restart: unless-stopped

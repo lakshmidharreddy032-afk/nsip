@@ -1,0 +1,93 @@
+# Known broker SOV layouts (format-fingerprint library). Columns: [header, field, unit_multiplier].
+# Deterministic mapping applies when the normalised header fingerprint matches exactly.
+layouts:
+  - id: L01-marsh-std
+    broker: Marsh-style standard
+    columns: [["Loc No", loc_no, 1], ["Address", address, 1], ["City", city, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Year Built", year_built, 1], ["Building", building, 1], ["Plant & Machinery", plant_machinery, 1], ["Stock", stock, 1], ["Contents", contents, 1], ["Other", other, 1], ["Total", total, 1]]
+  - id: L02-aon-lakh
+    broker: Aon-style values in lakh
+    columns: [["Sr", loc_no, 1], ["Risk Location", address, 1], ["Town", city, 1], ["PIN", pincode, 1], ["Trade", occupancy, 1], ["Const Type", construction, 1], ["YOB", year_built, 1], ["Bldg (Rs lakh)", building, 100000], ["P&M (Rs lakh)", plant_machinery, 100000], ["Stocks (Rs lakh)", stock, 100000], ["FFF (Rs lakh)", contents, 100000], ["Total (Rs lakh)", total, 100000]]
+  - id: L03-howden-cr
+    broker: Howden-style values in crore
+    columns: [["Location #", loc_no, 1], ["Premises Address", address, 1], ["City", city, 1], ["Postal Code", pincode, 1], ["Nature of Business", occupancy, 1], ["Building Construction", construction, 1], ["Year of Construction", year_built, 1], ["Building SI (Cr)", building, 10000000], ["Machinery SI (Cr)", plant_machinery, 10000000], ["Stock SI (Cr)", stock, 10000000], ["Total SI (Cr)", total, 10000000]]
+  - id: L04-anandrathi
+    broker: Regional broker A
+    columns: [["S.No", loc_no, 1], ["Location Address", address, 1], ["Pin Code", pincode, 1], ["Occupancy Description", occupancy, 1], ["Construction Class", construction, 1], ["Age / Year", year_built, 1], ["Building Value", building, 1], ["Plant Machinery Value", plant_machinery, 1], ["Stock Value", stock, 1], ["Furniture Fixtures", contents, 1], ["Total Sum Insured", total, 1]]
+  - id: L05-prudent
+    broker: Regional broker B
+    columns: [["Site ID", loc_no, 1], ["Site Address", address, 1], ["City/District", city, 1], ["PIN", pincode, 1], ["Activity", occupancy, 1], ["Structure", construction, 1], ["Built", year_built, 1], ["Civil Structure", building, 1], ["Equipment", plant_machinery, 1], ["Inventory", stock, 1], ["Misc", other, 1], ["TSI", total, 1]]
+  - id: L06-unison-thousand
+    broker: Regional broker C (Rs '000)
+    columns: [["Risk No", loc_no, 1], ["Address of Premises", address, 1], ["City", city, 1], ["Pincode", pincode, 1], ["Usage", occupancy, 1], ["Construction", construction, 1], ["Year", year_built, 1], ["Building Rs '000", building, 1000], ["P&M Rs '000", plant_machinery, 1000], ["Stock Rs '000", stock, 1000], ["Contents Rs '000", contents, 1000], ["Total Rs '000", total, 1000]]
+  - id: L07-global-noloc
+    broker: Global broker, no location number
+    columns: [["Address", address, 1], ["City", city, 1], ["Zip", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Year Built", year_built, 1], ["Buildings", building, 1], ["Machinery", plant_machinery, 1], ["Stock", stock, 1], ["Total Insured Value", total, 1]]
+  - id: L08-bajaj-portal-export
+    broker: 2023 portal export
+    columns: [["location_no", loc_no, 1], ["address_line", address, 1], ["city", city, 1], ["pincode", pincode, 1], ["occupancy", occupancy, 1], ["construction", construction, 1], ["year_built", year_built, 1], ["si_building", building, 1], ["si_pm", plant_machinery, 1], ["si_stock", stock, 1], ["si_contents", contents, 1], ["si_other", other, 1], ["si_total", total, 1]]
+  - id: L09-sme-simple
+    broker: Small broker, simple schedule
+    columns: [["Sl", loc_no, 1], ["Address", address, 1], ["PIN", pincode, 1], ["Business", occupancy, 1], ["Building", building, 1], ["Contents", contents, 1], ["Stock", stock, 1], ["Total", total, 1]]
+  - id: L10-construction-last
+    broker: Regional broker D
+    columns: [["Loc", loc_no, 1], ["Premises", address, 1], ["City", city, 1], ["Pincode", pincode, 1], ["Building Rs", building, 1], ["Plant Rs", plant_machinery, 1], ["Stock Rs", stock, 1], ["Total Rs", total, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Year Built", year_built, 1]]
+  - id: L11-lakh-compact
+    broker: Regional broker E (lakh)
+    columns: [["No", loc_no, 1], ["Location", address, 1], ["PIN", pincode, 1], ["Occupancy", occupancy, 1], ["Constr", construction, 1], ["YOC", year_built, 1], ["Bldg Lakhs", building, 100000], ["PM Lakhs", plant_machinery, 100000], ["Stock Lakhs", stock, 100000], ["Total Lakhs", total, 100000]]
+  - id: L12-insurance-dekho
+    broker: Digital broker export
+    columns: [["Risk ID", loc_no, 1], ["Full Address", address, 1], ["City Name", city, 1], ["Pin", pincode, 1], ["Occupancy Type", occupancy, 1], ["Building Type", construction, 1], ["Construction Year", year_built, 1], ["Building Amount", building, 1], ["Machinery Amount", plant_machinery, 1], ["Stock Amount", stock, 1], ["Contents Amount", contents, 1], ["Total Amount", total, 1]]
+  - id: L13
+    broker: Regional broker F
+    columns: [["Loc No", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Building", building, 1], ["Stock", stock, 1], ["Total", total, 1]]
+  - id: L14
+    broker: Regional broker G
+    columns: [["Location", loc_no, 1], ["Address", address, 1], ["City", city, 1], ["PIN Code", pincode, 1], ["Occupancy", occupancy, 1], ["Building SI", building, 1], ["P&M SI", plant_machinery, 1], ["Stock SI", stock, 1], ["Total SI", total, 1]]
+  - id: L15
+    broker: Regional broker H
+    columns: [["Sr No", loc_no, 1], ["Risk Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Building (Lakh)", building, 100000], ["Contents (Lakh)", contents, 100000], ["Total (Lakh)", total, 100000]]
+  - id: L16
+    broker: Regional broker I
+    columns: [["#", loc_no, 1], ["Site", address, 1], ["PIN", pincode, 1], ["Trade", occupancy, 1], ["Bldg", building, 1], ["P&M", plant_machinery, 1], ["Stk", stock, 1], ["TSI", total, 1]]
+  - id: L17
+    broker: Regional broker J
+    columns: [["Location No", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Year Built", year_built, 1], ["Building", building, 1], ["Machinery", plant_machinery, 1], ["Total", total, 1]]
+  - id: L18
+    broker: Regional broker K
+    columns: [["Loc", loc_no, 1], ["Address", address, 1], ["City", city, 1], ["Pin", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Stock", stock, 1], ["Total", total, 1]]
+  - id: L19
+    broker: Warehouse specialist
+    columns: [["Warehouse No", loc_no, 1], ["Warehouse Address", address, 1], ["Pincode", pincode, 1], ["Goods Stored", occupancy, 1], ["Structure", construction, 1], ["Structure Value", building, 1], ["Goods Value", stock, 1], ["Total Value", total, 1]]
+  - id: L20
+    broker: Hospitality specialist
+    columns: [["Property", loc_no, 1], ["Property Address", address, 1], ["City", city, 1], ["Pincode", pincode, 1], ["Category", occupancy, 1], ["Building Value", building, 1], ["FF&E", contents, 1], ["Total", total, 1]]
+  - id: L21
+    broker: Regional broker L
+    columns: [["Sno", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Year", year_built, 1], ["Building (Cr)", building, 10000000], ["P&M (Cr)", plant_machinery, 10000000], ["Total (Cr)", total, 10000000]]
+  - id: L22
+    broker: Regional broker M
+    columns: [["Loc ID", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Building", building, 1], ["Plant", plant_machinery, 1], ["Stock", stock, 1], ["Others", other, 1], ["Total", total, 1]]
+  - id: L23
+    broker: Regional broker N
+    columns: [["Location", loc_no, 1], ["Premises Address", address, 1], ["PIN", pincode, 1], ["Occupancy", occupancy, 1], ["Building Rs", building, 1], ["Contents Rs", contents, 1], ["Total Rs", total, 1]]
+  - id: L24
+    broker: Regional broker O
+    columns: [["Loc", loc_no, 1], ["Address", address, 1], ["Postal Code", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["Building", building, 1], ["Plant & Machinery", plant_machinery, 1], ["Total", total, 1]]
+  - id: L25
+    broker: Regional broker P
+    columns: [["No.", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Nature of Occupancy", occupancy, 1], ["Building", building, 1], ["Stock", stock, 1], ["Contents", contents, 1], ["Total", total, 1]]
+  - id: L26
+    broker: Regional broker Q
+    columns: [["Location", loc_no, 1], ["Address", address, 1], ["City", city, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Building ('000)", building, 1000], ["Stock ('000)", stock, 1000], ["Total ('000)", total, 1000]]
+  - id: L27
+    broker: Regional broker R
+    columns: [["Sr.", loc_no, 1], ["Address", address, 1], ["Pin", pincode, 1], ["Occupancy", occupancy, 1], ["Constn", construction, 1], ["Bldg Value", building, 1], ["PM Value", plant_machinery, 1], ["Stock Value", stock, 1], ["Total Value", total, 1]]
+  - id: L28
+    broker: Regional broker S
+    columns: [["Risk", loc_no, 1], ["Address", address, 1], ["Pincode", pincode, 1], ["Occupancy", occupancy, 1], ["Year of Construction", year_built, 1], ["Building", building, 1], ["Total", total, 1]]
+  - id: L29
+    broker: Regional broker T
+    columns: [["Location Number", loc_no, 1], ["Location Address", address, 1], ["Location Pincode", pincode, 1], ["Location Occupancy", occupancy, 1], ["Building Sum Insured", building, 1], ["Stock Sum Insured", stock, 1], ["Total Sum Insured", total, 1]]
+  - id: L30
+    broker: Regional broker U
+    columns: [["Loc", loc_no, 1], ["Address", address, 1], ["Pin", pincode, 1], ["Occupancy", occupancy, 1], ["Construction", construction, 1], ["YOB", year_built, 1], ["Building", building, 1], ["P&M", plant_machinery, 1], ["Stock", stock, 1], ["FFF", contents, 1], ["Total", total, 1]]

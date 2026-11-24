@@ -1,0 +1,42 @@
+name: security
+on:
+  pull_request:
+  schedule: [{ cron: "0 20 * * *" }]
+permissions: { contents: read, security-events: write }
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { name: core-api, context: ., file: services/core-api/Dockerfile }
+          - { name: auth-service, context: services/auth-service, file: services/auth-service/Dockerfile }
+          - { name: workbench-web, context: ., file: apps/workbench-web/Dockerfile }
+          - { name: auth-web, context: ., file: apps/auth-web/Dockerfile }
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t nsip/${{ matrix.name }}:scan -f ${{ matrix.file }} ${{ matrix.context }}
+      - name: Trivy (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with: { image-ref: "nsip/${{ matrix.name }}:scan", severity: "HIGH,CRITICAL", exit-code: "1", ignore-unfixed: true, format: sarif, output: trivy.sarif }
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: trivy.sarif, category: "trivy-${{ matrix.name }}" }
+
+  code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install bandit==1.7.10 pip-audit==2.7.3
+      - run: bandit -q -r services/core-api/app services/auth-service/app -x tests
+      - run: pip-audit -r <(python -c "import tomllib;print('\n'.join(tomllib.load(open('services/core-api/pyproject.toml','rb'))['project']['dependencies']))")
+      - name: Red-team and authorisation suites
+        run: pip install -e "services/core-api[dev]" && cd services/core-api && pytest tests/security tests/architecture -q
+      - run: npm audit --audit-level=high || true

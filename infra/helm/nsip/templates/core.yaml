@@ -1,0 +1,109 @@
+{{- $root := . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nsip-core-api
+  labels: {{- include "nsip.labels" . | nindent 4 }}
+    app: nsip-core-api
+spec:
+  replicas: {{ .Values.coreApi.replicas }}
+  selector: { matchLabels: { app: nsip-core-api } }
+  strategy: { rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  template:
+    metadata:
+      labels: { app: nsip-core-api }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /metrics, prometheus.io/port: "8000" }
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: core-api
+          image: {{ include "nsip.image" (dict "root" $root "name" "core-api") }}
+          ports: [{ containerPort: 8000 }]
+          envFrom: [{ secretRef: { name: {{ .Values.externalSecrets.coreSecretName }} } }]
+          env:
+            {{- range $k, $v := .Values.coreApi.env }}
+            - { name: {{ $k }}, value: {{ $v | quote }} }
+            {{- end }}
+          readinessProbe: { httpGet: { path: /api/ready, port: 8000 }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /api/health, port: 8000 }, periodSeconds: 20 }
+          resources: {{- toYaml .Values.coreApi.resources | nindent 12 }}
+          {{- include "nsip.securityContext" . | nindent 10 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }, { name: var, mountPath: /srv/services/core-api/var }]
+      volumes: [{ name: tmp, emptyDir: {} }, { name: var, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: nsip-core-api }
+spec: { selector: { app: nsip-core-api }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: nsip-core-api }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: nsip-core-api }
+  minReplicas: {{ .Values.coreApi.hpa.minReplicas }}
+  maxReplicas: {{ .Values.coreApi.hpa.maxReplicas }}
+  metrics: [{ type: Resource, resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.coreApi.hpa.targetCPU }} } } }]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: nsip-core-api }
+spec: { minAvailable: 2, selector: { matchLabels: { app: nsip-core-api } } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: nsip-worker, labels: { app: nsip-worker } }
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector: { matchLabels: { app: nsip-worker } }
+  template:
+    metadata: { labels: { app: nsip-worker } }
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: worker
+          image: {{ include "nsip.image" (dict "root" $root "name" "core-api") }}
+          command: ["celery", "-A", "app.workers.tasks:celery_app", "worker", "-Q", "ingest,pipeline,maintenance", "--concurrency=4"]
+          envFrom: [{ secretRef: { name: {{ .Values.externalSecrets.coreSecretName }} } }]
+          env:
+            {{- range $k, $v := .Values.coreApi.env }}
+            - { name: {{ $k }}, value: {{ $v | quote }} }
+            {{- end }}
+          resources: {{- toYaml .Values.worker.resources | nindent 12 }}
+          {{- include "nsip.securityContext" . | nindent 10 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+{{- if .Values.beat.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: nsip-beat }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: nsip-beat } }
+  template:
+    metadata: { labels: { app: nsip-beat } }
+    spec:
+      containers:
+        - name: beat
+          image: {{ include "nsip.image" (dict "root" $root "name" "core-api") }}
+          command: ["celery", "-A", "app.workers.tasks:celery_app", "beat", "-s", "/tmp/celerybeat-schedule"]
+          envFrom: [{ secretRef: { name: {{ .Values.externalSecrets.coreSecretName }} } }]
+          {{- include "nsip.securityContext" . | nindent 10 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+{{- end }}
+{{- if .Values.worker.keda.enabled }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: nsip-worker }
+spec:
+  scaleTargetRef: { name: nsip-worker }
+  minReplicaCount: {{ .Values.worker.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.worker.keda.maxReplicas }}
+  triggers:
+    - type: redis
+      metadata: { addressFromEnv: NSIP_REDIS_HOSTPORT, listName: pipeline, listLength: {{ .Values.worker.keda.listLength | quote }} }
+{{- end }}
