@@ -15,7 +15,7 @@ jobs:
           - { name: workbench-web, context: ., file: apps/workbench-web/Dockerfile }
           - { name: auth-web, context: ., file: apps/auth-web/Dockerfile }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build -t nsip/${{ matrix.name }}:scan -f ${{ matrix.file }} ${{ matrix.context }}
       - name: Trivy (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
@@ -27,7 +27,7 @@ jobs:
   code:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
