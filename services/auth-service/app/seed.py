@@ -30,9 +30,31 @@ DEMO_USERS = [
 ]
 
 
+# Pilot authority matrix: email -> line -> [max sum insured, max premium, regions]. core-api seeds the same
+# entries with the same deterministic IDs, so token claims match the database even after restarts.
+DEMO_AUTHORITY = {
+    "underwriter@northstar.example": {"package": [100000000, 500000, ["west"]],
+                                      "property": [250000000, 1000000, ["west"]]},
+    "underwriter.south@northstar.example": {"package": [100000000, 500000, ["south"]],
+                                            "property": [250000000, 1000000, ["south"]]},
+    "senior.uw@northstar.example": {"package": [500000000, 2500000, ["all"]],
+                                    "property": [2500000000, 10000000, ["all"]]},
+}
+
+
 def user_id_for(email: str) -> uuid.UUID:
     """Deterministic IDs so the core-api seed links users without sharing a database."""
     return uuid.uuid5(NS, email)
+
+
+def limit_id_for(email: str, line: str) -> uuid.UUID:
+    return uuid.uuid5(NS, f"authority:{email}:{line}")
+
+
+def authority_claims(email: str) -> list[dict]:
+    return [{"limit_id": str(limit_id_for(email, line)), "version": 1, "line": line, "max_sum_insured": si,
+             "max_premium": prem, "regions": regions}
+            for line, (si, prem, regions) in DEMO_AUTHORITY.get(email, {}).items()]
 
 
 def seed(create_schema: bool = True) -> int:
@@ -46,7 +68,8 @@ def seed(create_schema: bool = True) -> int:
             mfa = any(r in ("underwriter", "senior_underwriter", "cuo", "admin") for r in roles)
             u = AuthUser(id=user_id_for(email), email=email, full_name=name, region=region,
                          password_hash=hash_password(DEMO_PASSWORD), mfa_enabled=mfa,
-                         mfa_secret_enc=encrypt_secret(DEMO_TOTP) if mfa else None)
+                         mfa_secret_enc=encrypt_secret(DEMO_TOTP) if mfa else None,
+                         authority=authority_claims(email))
             u.roles = ensure_roles(db, roles)
             db.add(u)
             created += 1

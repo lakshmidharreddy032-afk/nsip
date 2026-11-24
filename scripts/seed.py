@@ -17,17 +17,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# (email, line -> (max SI, max premium, regions))
-AUTHORITY = {
-    "underwriter@northstar.example": {"package": (10_00_00_000, 5_00_000, ["west"]),
-                                      "property": (25_00_00_000, 10_00_000, ["west"])},
-    "underwriter.south@northstar.example": {"package": (10_00_00_000, 5_00_000, ["south"]),
-                                            "property": (25_00_00_000, 10_00_000, ["south"])},
-    "senior.uw@northstar.example": {"package": (50_00_00_000, 25_00_000, ["all"]),
-                                    "property": (250_00_00_000, 1_00_00_000, ["all"])},
-}
-
-
 def demo_users() -> dict:
     """Read the demo user list and ID namespace from the auth seed without importing the auth app."""
     import ast
@@ -38,12 +27,14 @@ def demo_users() -> dict:
     for node in tree.body:
         if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name):
             name = node.targets[0].id
-            if name == "DEMO_USERS":
+            if name in ("DEMO_USERS", "DEMO_AUTHORITY"):
                 vals[name] = ast.literal_eval(node.value)
             elif name == "NS":
                 vals[name] = uuid.UUID(ast.literal_eval(node.value.args[0]))  # type: ignore[attr-defined]
     namespace = vals["NS"]
-    return {"DEMO_USERS": vals["DEMO_USERS"], "user_id_for": lambda email: uuid.uuid5(namespace, email)}
+    return {"DEMO_USERS": vals["DEMO_USERS"], "DEMO_AUTHORITY": vals["DEMO_AUTHORITY"],
+            "user_id_for": lambda email: uuid.uuid5(namespace, email),
+            "limit_id_for": lambda email, line: uuid.uuid5(namespace, f"authority:{email}:{line}")}
 
 
 def seed_auth() -> None:
@@ -60,9 +51,8 @@ def seed_core(with_data: bool) -> None:
     sys.path.insert(0, str(ROOT / "services" / "core-api"))
     from app.bootstrap import bootstrap
     from app.core.db import Base, SessionLocal, engine
-    from app.core.security import Principal
-    from app.domain.authority import service as authority
-    from app.models import AuthorityLimit, Role, User, UserRole
+    from app.domain.audit import service as audit
+    from app.models import AuthorityLimit, Role, User, UserRole, utcnow
     from sqlalchemy import select
 
     ns = demo_users()
@@ -81,17 +71,24 @@ def seed_core(with_data: bool) -> None:
                     db.flush()
                     db.add(UserRole(user_id=uid, role_id=role.id))
         db.commit()
-        admin = Principal(ns["user_id_for"]("admin@northstar.example"), "admin", "Admin", frozenset({"admin"}), "all")
-        cuo = Principal(ns["user_id_for"]("cuo@northstar.example"), "cuo", "CUO", frozenset({"cuo"}), "all")
-        for email, lines in AUTHORITY.items():
+        admin_id = ns["user_id_for"]("admin@northstar.example")
+        cuo_id = ns["user_id_for"]("cuo@northstar.example")
+        for email, lines in ns["DEMO_AUTHORITY"].items():
             uid = ns["user_id_for"](email)
             for line, (si, prem, regions) in lines.items():
-                if db.scalar(select(AuthorityLimit).where(AuthorityLimit.user_id == uid, AuthorityLimit.line == line,
-                                                          AuthorityLimit.status == "approved")):
+                lid = ns["limit_id_for"](email, line)
+                if db.get(AuthorityLimit, lid):
                     continue
-                lim = authority.propose(db, admin, user_id=uid, line=line, max_sum_insured=si, max_premium=prem,
-                                        regions=regions, reason="Pilot authority matrix (seed)")
-                authority.decide(db, cuo, lim.id, True, "seed approval")
+                # Seeded as already maker-checker approved (admin proposed, CUO approved), with the same
+                # deterministic IDs the auth-service seed places in token claims.
+                db.add(AuthorityLimit(id=lid, user_id=uid, line=line, max_sum_insured=si, max_premium=prem,
+                                      regions=regions, status="approved", version=1, maker_id=admin_id,
+                                      checker_id=cuo_id, approved_at=utcnow(), reason="Pilot authority matrix (seed)"))
+                db.flush()
+                audit.record(db, action="authority.seeded", entity_type="authority_limit", entity_id=lid,
+                             actor_type="system", data={"user": email, "line": line, "maker": str(admin_id),
+                                                        "checker": str(cuo_id)})
+        db.commit()
         print("core-api: reference data, users and authority seeded")
         if with_data:
             data = Path(os.environ.get("SEED_DATA_DIR", str(ROOT / "eval" / "datasets" / "demo")))
